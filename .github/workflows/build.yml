@@ -1,0 +1,77 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/**'
+      - '!.github/workflows/**'
+      - 'README.md'
+  pull_request:
+    paths-ignore:
+      - '.github/**'
+      - '!.github/workflows/**'
+      - 'README.md'
+
+jobs:
+  BuildISO:
+    name: Build ISO
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone tree
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          llvm \
+          lld
+        pip3 install -r requirements.txt --break-system-packages
+
+    - name: Compile
+      run: |
+        export NXDK_DIR="${GITHUB_WORKSPACE}/third_party/nxdk"
+        cmake -B build \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_TOOLCHAIN_FILE="${NXDK_DIR}/share/toolchain-nxdk.cmake"
+        cmake --build build -- -j$(grep -c processor /proc/cpuinfo)
+
+  BuildMacOS:
+    name: Build macOS
+    runs-on: macOS-latest
+
+    steps:
+      - name: Clone tree
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          export HOMEBREW_NO_AUTO_UPDATE=1
+          export HOMEBREW_NO_INSTALL_CLEANUP=1
+          brew install \
+            cmake \
+            coreutils \
+            llvm \
+            lld
+          export PIP_BREAK_SYSTEM_PACKAGES=1
+          pip3 install -r requirements.txt
+
+      - name: Compile
+        run: |
+          LLVMDIR="$(brew --prefix llvm)"
+          LLDDIR="$(brew --prefix lld)"
+          export PATH="${LLVMDIR}/bin:${LLDDIR}/bin:$PATH"
+          export LDFLAGS="-L${LLVMDIR}/lib/c++ -L${LLVMDIR}/lib -L${LLDDIR}/lib"
+          export CPPFLAGS="-I${LLDDIR}/include"
+
+          export NXDK_DIR="${GITHUB_WORKSPACE}/third_party/nxdk"
+          cmake -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_TOOLCHAIN_FILE="${NXDK_DIR}/share/toolchain-nxdk.cmake" \
+                -DDUMP_CONFIG_FILE=OFF
+          cmake --build build -- -j

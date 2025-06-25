@@ -1,0 +1,9 @@
+[submodule "third_party/nxdk"]
+	path = third_party/nxdk
+	url = https://github.com/XboxDev/nxdk.git
+[submodule "third_party/printf"]
+	path = third_party/printf
+	url = https://github.com/mpaland/printf.git
+[submodule "third_party/fpng"]
+	path = third_party/fpng
+	url = https://github.com/richgel999/fpng
