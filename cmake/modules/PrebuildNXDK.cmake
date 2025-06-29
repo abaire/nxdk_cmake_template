@@ -1,7 +1,12 @@
-set(NXDK_SOURCE_DIR "${CMAKE_SOURCE_DIR}/third_party/nxdk")
-set(NXDK_BUILD_MARKER "${NXDK_SOURCE_DIR}/lib/libnxdk.lib")
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    message(FATAL_ERROR "CMAKE_TOOLCHAIN_FILE must be set to the NXDK toolchain")
+endif()
 
-if (NOT EXISTS "${NXDK_BUILD_MARKER}")
+get_filename_component(ABS_TOOLCHAIN_PATH "${CMAKE_TOOLCHAIN_FILE}" ABSOLUTE)
+get_filename_component(NXDK_SHARE_DIR "${ABS_TOOLCHAIN_PATH}" DIRECTORY)
+get_filename_component(NXDK_SOURCE_DIR "${NXDK_SHARE_DIR}" DIRECTORY)
+
+if (NOT EXISTS "${NXDK_SOURCE_DIR}/lib/libnxdk.lib" OR NOT EXISTS "${NXDK_SOURCE_DIR}/tools/extract-xiso/build/extract-xiso")
     message(STATUS "Bootstrapping NXDK build in ${NXDK_SOURCE_DIR}.")
 
     find_program(MAKE_COMMAND NAMES gmake make REQUIRED)
@@ -17,8 +22,7 @@ if (NOT EXISTS "${NXDK_BUILD_MARKER}")
                 . activate -s &&
                 cd .. &&
                 DEBUG=${NXDK_DEBUG_FLAG} LTO=${NXDK_LTO_FLAG} NXDK_ONLY=y ${MAKE_COMMAND} -j &&
-                ${MAKE_COMMAND} cxbe -j &&
-                ${MAKE_COMMAND} extract-xiso -j
+                ${MAKE_COMMAND} tools -j
             "
     )
 
