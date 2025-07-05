@@ -57,7 +57,9 @@ endmacro()
 # Vertex shaders compiled using https://pypi.org/project/nv2a-vsh/
 include(NV2A_VSH REQUIRED)
 generate_nv2a_vshinc_files(
-        generated_nv2a_vertex_shaders
+        OUTPUT_VARIABLE _VERTEX_SHADER_FILES
+        INCLUDE_DIRECTORIES_VARIABLE _VERTEX_SHADER_INCLUDE_DIRS
+        GENERATION_TARGET_VARIABLE _VERTEX_SHADER_GEN_TARGET
         SOURCES
         shaders/passthrough.vsh
 )
@@ -65,6 +67,7 @@ generate_nv2a_vshinc_files(
 add_executable(
         ${PROJECT_NAME}
         main.cpp
+        ${_VERTEX_SHADER_FILES}
 )
 
 # Pull debug info out of the binary into a host-side linked binary.
@@ -77,17 +80,22 @@ target_include_directories(
         PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}"
         "${CMAKE_CURRENT_BINARY_DIR}"
+        ${_VERTEX_SHADER_INCLUDE_DIRS}
 )
 
 target_link_libraries(
         ${PROJECT_NAME}
-        PUBLIC
-        generated_nv2a_vertex_shaders
+        PRIVATE
         NXDK::NXDK
         NXDK::NXDK_CXX
         NXDK::SDL2
         NXDK::SDL2_Image
         NXDK::SDL_TTF
+)
+
+add_dependencies(
+        ${PROJECT_NAME}
+        ${_VERTEX_SHADER_GEN_TARGET}
 )
 
 add_xbe(
