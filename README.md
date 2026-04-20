@@ -19,6 +19,7 @@ Under Settings > Build, Execution, Deployment > CMake
   `-DCMAKE_TOOLCHAIN_FILE=$CMakeProjectDir$/third_party/nxdk/share/toolchain-nxdk.cmake`
 
 - Optionally modify the `PATH` variable to make sure the path to your chosen version of Clang comes first.
+- You may also need to set `NXDK_DIR` to the absolute path of `third_party/nxdk` within this repository.
 
 ### Debugging
 

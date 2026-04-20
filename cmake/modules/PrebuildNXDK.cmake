@@ -6,6 +6,10 @@ get_filename_component(ABS_TOOLCHAIN_PATH "${CMAKE_TOOLCHAIN_FILE}" ABSOLUTE)
 get_filename_component(NXDK_SHARE_DIR "${ABS_TOOLCHAIN_PATH}" DIRECTORY)
 get_filename_component(NXDK_SOURCE_DIR "${NXDK_SHARE_DIR}" DIRECTORY)
 
+# Automatically set NXDK_DIR in the environment for the CMake configuration phase.
+# This satisfies the requirement in toolchain-nxdk.cmake.
+set(ENV{NXDK_DIR} "${NXDK_SOURCE_DIR}")
+
 if (NOT EXISTS "${NXDK_SOURCE_DIR}/lib/libnxdk.lib" OR NOT EXISTS "${NXDK_SOURCE_DIR}/tools/extract-xiso/build/extract-xiso")
     message(STATUS "Bootstrapping NXDK build in ${NXDK_SOURCE_DIR}.")
 
@@ -18,6 +22,11 @@ if (NOT EXISTS "${NXDK_SOURCE_DIR}/lib/libnxdk.lib" OR NOT EXISTS "${NXDK_SOURCE
             NXDK_BUILD_COMMAND
             "
                 export NXDK_DIR=\"${NXDK_SOURCE_DIR}\"
+                if [[ ! -d bin ]]; then
+                  echo Make sure the NXDK submodule is initialized
+                  echo '> git submodule update --init --recursive'
+                  exit 1
+                fi
                 cd bin &&
                 . activate -s &&
                 cd .. &&
